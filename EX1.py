@@ -1,10 +1,12 @@
 import time
 import random
 import Const
+from threading import Thread
 
 
-class Requester(object):
+class Requester(Thread):
     def __init__(self, range_amount_create=(1, 3), range_time_create=(1, 3), time_processing_requests=4):
+        Thread.__init__(self)
         self.range_amount_create = self._check_amount_or_time(range_amount_create)
         self.range_time_create = self._check_amount_or_time(range_time_create)
         self.requests = list()
@@ -93,6 +95,7 @@ class Requester(object):
                 count = count + 1
                 pass
 
+
 class Request(object):
     _lifetime = 0
     _processing_time = 0
@@ -114,7 +117,17 @@ class Request(object):
             self._lifetime = self._lifetime - 1
 
 
-
 if __name__ == '__main__':
     requester = Requester()
-    requester.run()
+    requester.start()
+    while True:
+        print("I'm other thread!")
+        print("I'm other thread!")
+        print("I'm other thread!")
+        print("I'm other thread!")
+        print("I'm other thread!")
+        print("I'm other thread!")
+        print("I'm other thread!")
+        print("I'm other thread!")
+        time.sleep(2)
+        pass
