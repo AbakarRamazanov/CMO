@@ -1,10 +1,22 @@
 import time
 import random
-import Const
 from threading import Thread
 
+import Request
+import Const
 
-class Requester(Thread):
+
+# Интерфейс состоит из нескольких функций:
+# Собственно конструктор:
+# Request_Manager(range_amount_create=(1, 3), range_time_create=(1, 3), time_processing_requests=4)
+# , где range_amount_create - диапазон времени поступления запрсово
+# , range_time_create - диапазон времени ожидания перед поступлением новых запросов
+# , time_processing_requests - время выполнения запросов
+#
+# Получение части запросов: get_part(amount) - возвращает запросы в количестве amount
+
+
+class Request_Manager(Thread):
     def __init__(self, range_amount_create=(1, 3), range_time_create=(1, 3), time_processing_requests=4):
         Thread.__init__(self)
         self.range_amount_create = self._check_amount_or_time(range_amount_create)
@@ -23,11 +35,12 @@ class Requester(Thread):
                 print("_amount_get_request \t= " + str(self._amount_get_request))
                 print("_delay_new_requests \t= " + str(self._delay_new_requests))
                 print("len(self.requests) \t\t= " + str(len(self.requests)))
+                print("self.total_requests \t= " + str(self.total_requests))
                 pass
             if self._amount_get_request != 0:
                 self.requests = self.requests[
                                 self._amount_get_request:]  # удаляем из списка запрошенные элементы
-                _amount_get_request = 0
+                self._amount_get_request = 0
                 pass
             if not self._delay_new_requests:
                 self._add_new_requests()
@@ -39,12 +52,15 @@ class Requester(Thread):
             pass
 
     def get_part(self, amount):
+        if amount > len(self.requests):
+            self._amount_get_request = len(self.requests)
+            return self.requests[:len(self.requests)]
+        self._amount_get_request = amount
+        return self.requests[:amount]
         pass
 
-    def how_much_is_thrown_away(self):
-        return self.amount_thrown_away
-
     requests = 0  # список запросов
+    total_requests = 0
     amount_living_requests = 0  # количество живых запросов
     amount_dead_requests = 0  # количество мертвых запросов
     range_amount_create = (0, 0)  # диапазон количества для создания
@@ -65,7 +81,8 @@ class Requester(Thread):
     def _add_new_requests(self):
         count_new_requests = self._get_count_new_requests()
         for n in range(count_new_requests):
-            self.requests.append(Request())
+            self.total_requests = self.total_requests + 1
+            self.requests.append(Request.Request())
             pass
         self._delay_new_requests = random.randint(self.range_time_create[0], self.range_time_create[1])
         pass
@@ -73,10 +90,6 @@ class Requester(Thread):
     def _get_count_new_requests(self):
         return random.randint(self.range_amount_create[0], self.range_amount_create[1])
         pass
-
-    # def _get_delay_new_requests(self):
-    #     return random.randint(self.range_time_create[0], self.range_time_create[1])
-    #     pass
 
     def _step(self):
         self._delay_new_requests = self._delay_new_requests - 1
@@ -96,38 +109,19 @@ class Requester(Thread):
                 pass
 
 
-class Request(object):
-    _lifetime = 0
-    _processing_time = 0
-
-    def __init__(self, lifetime=2, processing_time=4):
-        self._lifetime = lifetime
-        self._processing_time = processing_time
-
-    def get_processint_time(self):
-        return self._processing_time
-
-    def is_dead(self):
-        if self._lifetime <= 0:
-            return True
-        return False
-
-    def live_day_again(self):
-        if self._lifetime > 0:
-            self._lifetime = self._lifetime - 1
-
-
 if __name__ == '__main__':
-    requester = Requester()
+    requester = Request_Manager()
     requester.start()
-    while True:
-        print("I'm other thread!")
-        print("I'm other thread!")
-        print("I'm other thread!")
-        print("I'm other thread!")
-        print("I'm other thread!")
-        print("I'm other thread!")
-        print("I'm other thread!")
-        print("I'm other thread!")
-        time.sleep(2)
-        pass
+    name2 = requester.get_part
+    name2(3)
+    # while True:
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     print("I'm other thread!")
+    #     time.sleep(2)
+    #     pass
