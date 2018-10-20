@@ -1,42 +1,67 @@
-import cocos
-import pyglet
+from tkinter import *
+from threading import Thread
+
+import Request_Manager
+import Channel_Manager
 
 
-class DisplayPurpleRect(cocos.layer.Layer):
-
-    background_sprite = 0
-    house = 0
+class ThreadWindow(Thread):
+    root = 0
+    lbl = 0
+    request_manager = 0
+    channel_manager = 0
+    stat_text = 0
 
     def __init__(self):
-        super(DisplayPurpleRect, self).__init__()
-        self.house = cocos.sprite.Sprite('img/ex2.png', anchor=(0.0, 0.0))
-        self.house.scale = 0.5
-        self.background_sprite = cocos.sprite.Sprite(pyglet.image.load_animation('img/space1.gif'), anchor=(0.0, 0.0))
-        self.background_sprite.position = (0, 0)
-        self.background_sprite.rotation = 0
-        self.add(self.background_sprite, z=0)
-        self.add(self.house, z=5)
+        Thread.__init__(self)
+        self.request_manager = Request_Manager.Request_Manager()
+        self.channel_manager = Channel_Manager.Channel_Manager(name_def_get_part_requests=self.request_manager.get_part,
+                                                               start_count_channel=3)
+        self.request_manager.start()
+        self.channel_manager.start()
+
+        self.root = Tk()
+        btn_create_new_channel = Button(self.root, text='Add channel')
+        btn_remove_empty_channel = Button(self.root, text='Remove channel')
+        btn_create_new_channel.bind('<Button-1>', self.channel_manager.create_new_channel)
+        btn_remove_empty_channel.bind('<Button-1>', self.channel_manager.remove_channel)
+
+        btn_create_new_channel.pack(side='left')
+        btn_remove_empty_channel.pack(side='right')
+
+        self.stat_text = StringVar()
+        self.lbl = Label(self.root, textvariable=self.stat_text)
+        self.lbl.pack(side='top')
 
 
-    def set_size_background(self, width, heigth):
-        self.background_sprite.scale_x = width / self.background_sprite.width
-        self.background_sprite.scale_y = heigth / self.background_sprite.height
-        pass
+    def run(self):
+        self.root.mainloop()
 
-    def set_position_house(self, width, height):
-        self.house.position = width/2 - self.house.width/2, 0
+    def get_channel_manager(self):
+        return self.channel_manager
+
+    def get_request_manager(self):
+        return self.request_manager
+
+    def get_root(self):
+        return self.root
+
+    def get_lbl(self):
+        return self.lbl
 
 
+thread_window = ThreadWindow()
 
+thread_window.start()
 
+channel_manager = thread_window.get_channel_manager()
+lbl = thread_window.stat_text
+root = thread_window.get_root()
+while True:
 
-Dwidth = 800
-Dheight = 800
-cocos.director.director.init(width=Dwidth, height=Dheight, caption="Hello World", fullscreen=False)
-
-display = DisplayPurpleRect()
-display.set_size_background(Dwidth, Dheight)
-display.set_position_house(Dwidth, Dheight)
-
-main_scene = cocos.scene.Scene(display)
-cocos.director.director.run(main_scene)
+    stat = channel_manager.get_stat()
+    s = lbl.get()
+    lbl.set(stat)
+    # print(lbl.text)
+    root.update()
+    pass
