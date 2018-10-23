@@ -1,34 +1,44 @@
 import time
-import threading
 from threading import Thread
-import Request
 
 
 class Channel(Thread):
-    _processing_time = 0
-    event = threading.Event()
+    report_manager_is_empty = 0
+    request = 0
+    flag = True
+    flag_request = False
 
-    def __init__(self):
+    def __init__(self, report_manager_is_empty):
         Thread.__init__(self)
-        self.event.set()
-        self.event.wait()
-        self.event.set()
-
-    def put_request(self, request):
-        self._processing_time = request.get_processing_time()
+        self.report_manager_is_empty = report_manager_is_empty
         pass
 
-    def is_empty(self):
-        if self.event.is_set():
-            return True
-        return False
+    def set_request(self, request):
+        # print(self.get_name() + " get request is " + str(request.time_request) + " complexity")
+        self.flag_request = True
+        self.request = request
 
     def run(self):
-        while True:
-            self.event.clear()
-            try:
-                while not self._processing_time <= 0:
-                    time.sleep(1)
-                    self._processing_time = self._processing_time - 1
-            finally:
-                self.event.set()
+        while self.flag:
+            while self.flag_request:
+                time.sleep(self.request.time_request)
+                self.request.time_request = 0
+                self.report_manager_is_empty(self)
+                self.flag_request = False
+            pass
+
+    def channel_free(self):
+        pass
+
+    def remove_channel(self):
+        self.flag = False
+        pass
+
+    name = "Channel#"
+
+    def set_name(self, name):
+        self.name += str(name)
+        pass
+
+    def get_name(self):
+        return self.name
